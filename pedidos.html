@@ -1,0 +1,150 @@
+
+
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Formulario de Pedido</title>
+  <style>
+    body {
+      font-family: Arial;
+      background: #f1f1f1;
+      padding: 20px;
+    }
+    h2 {
+      color: #007bff;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 8px;
+    }
+    th {
+      background: #007bff;
+      color: white;
+    }
+    input, select {
+      width: 100%;
+      padding: 6px;
+    }
+    button {
+      margin-top: 15px;
+      background-color: #007bff;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 6px;
+    }
+  </style>
+</head>
+<body>
+  <h2>Formulario de Pedido</h2>
+
+  <label for="tecnico">Técnico:</label>
+  <input type="text" id="tecnico" required />
+
+  <table id="tablaPedidos">
+    <thead>
+      <tr>
+        <th>N°</th>
+        <th>Código</th>
+        <th>Producto</th>
+        <th>Descripción</th>
+        <th>Cantidad</th>
+        <th>Comentario</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <button onclick="enviarPedidos()">Enviar Pedido</button>
+
+  <script>
+    const API_URL = "https://script.google.com/macros/s/AKfycbxjF4ZDC4tIKjO0ds70_1n93kEiZX3KtsjcbecBEWSFkFhMIDsz_chKCl8qc_rXUhmP/exec";
+
+    let catalogo = [];
+
+    fetch(API_URL)
+      .then(res => res.json())
+      .then(data => {
+        catalogo = data.slice(1); // Omitir encabezado
+        generarFilas();
+      });
+
+    function generarFilas() {
+      const tbody = document.querySelector("#tablaPedidos tbody");
+      for (let i = 1; i <= 10; i++) {
+        const row = document.createElement("tr");
+
+        row.innerHTML = `
+          <td>${i}</td>
+          <td><input type="text" onchange="actualizarProducto(this)" /></td>
+          <td><input type="text" class="producto" disabled /></td>
+          <td><input type="text" class="descripcion" disabled /></td>
+          <td><input type="number" /></td>
+          <td><input type="text" /></td>
+        `;
+
+        tbody.appendChild(row);
+      }
+    }
+
+    function actualizarProducto(input) {
+      const codigo = input.value.trim();
+      const fila = input.parentElement.parentElement;
+      const productoInput = fila.querySelector(".producto");
+      const descripcionInput = fila.querySelector(".descripcion");
+
+      const encontrado = catalogo.find(row => row[0].toString() === codigo);
+      if (encontrado) {
+        productoInput.value = encontrado[1];
+        descripcionInput.value = encontrado[2];
+      } else {
+        productoInput.value = "";
+        descripcionInput.value = "";
+      }
+    }
+
+    function enviarPedidos() {
+      const tecnico = document.getElementById("tecnico").value.trim();
+      const filas = document.querySelectorAll("#tablaPedidos tbody tr");
+
+      let pedidos = [];
+
+      filas.forEach(fila => {
+        const codigo = fila.children[1].querySelector("input").value.trim();
+        const producto = fila.children[2].querySelector("input").value.trim();
+        const cantidad = fila.children[4].querySelector("input").value.trim();
+        const comentario = fila.children[5].querySelector("input").value.trim();
+
+        if (codigo && cantidad) {
+          pedidos.push({ tecnico, codigo, producto, cantidad, comentario });
+        }
+      });
+
+      if (pedidos.length === 0) {
+        alert("⚠️ Debes ingresar al menos un producto con cantidad");
+        return;
+      }
+
+      Promise.all(pedidos.map(p =>
+        fetch(API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(p)
+        })
+      )).then(() => {
+        alert("✅ Pedido enviado correctamente");
+        location.reload();
+      }).catch(() => {
+        alert("❌ Error al enviar pedido");
+      });
+    }
+  </script>
+</body>
+</html>
