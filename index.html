@@ -2,8 +2,8 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Formulario de Pedido</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Formulario de Pedido</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
     body { background-color: #f4f4f4; padding: 20px; }
@@ -54,29 +54,35 @@
   </div>
 
   <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxjF4ZDC4tIKjO0ds70_1n93kEiZX3KtsjcbecBEWSFkFhMIDsz_chKCl8qc_rXUhmP/exec";
+    const API_URL = 'https://script.google.com/macros/s/AKfycbxjF4ZDC4tIKjO0ds70_1n93kEiZX3KtsjcbecBEWSFkFhMIDsz_chKCl8qc_rXUhmP/exec';
     let catalogo = [];
 
-    // Cargar catálogo
-    fetch(SCRIPT_URL)
-      .then(res => res.json())
-      .then(data => { catalogo = data; });
+    // Cargar catálogo al inicio
+    fetch(API_URL)
+      .then(response => response.json())
+      .then(data => catalogo = data)
+      .catch(error => alert("❌ Error al cargar catálogo: " + error));
 
-    // Autocompletado
+    // Autocompletar al escribir código
     document.addEventListener('input', function(e) {
       if (e.target.classList.contains('codigo-input')) {
-        const fila = e.target.closest('tr');
+        const row = e.target.closest('tr');
         const codigo = e.target.value.trim();
-        const producto = fila.querySelector('.producto-input');
-        const descripcion = fila.querySelector('.descripcion-input');
-        const encontrado = catalogo.find(item => item.codigo === codigo);
+        const productoInput = row.querySelector('.producto-input');
+        const descripcionInput = row.querySelector('.descripcion-input');
 
-        producto.value = encontrado ? encontrado.producto : '';
-        descripcion.value = encontrado ? encontrado.descripcion : '';
+        const item = catalogo.find(i => i.codigo === codigo);
+        if (item) {
+          productoInput.value = item.producto;
+          descripcionInput.value = item.descripcion;
+        } else {
+          productoInput.value = '';
+          descripcionInput.value = '';
+        }
       }
     });
 
-    // Envío
+    // Enviar pedido
     function enviarPedidos() {
       const tecnico = document.getElementById('tecnico').value.trim();
       const filas = document.querySelectorAll('#tabla-pedidos tr');
@@ -99,23 +105,24 @@
         return;
       }
 
-      fetch(SCRIPT_URL, {
+      fetch(API_URL, {
         method: "POST",
-        body: JSON.stringify(datos),
-        headers: { "Content-Type": "application/json" }
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(datos)
       })
-      .then(res => res.json())
+      .then(response => response.json())
       .then(resp => {
         if (resp.ok) {
           alert("✅ Pedido enviado correctamente");
           location.reload();
         } else {
-          alert("❌ Error al enviar pedido");
+          alert("❌ Error al enviar: " + resp.error);
         }
       })
-      .catch(() => alert("❌ Error de conexión con Google Script"));
+      .catch(error => alert("❌ Error de conexión con Google Script: " + error));
     }
   </script>
 </body>
 </html>
+
 
