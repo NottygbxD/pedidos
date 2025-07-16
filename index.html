@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Formulario de Pedido</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
@@ -54,46 +54,44 @@
   </div>
 
   <script>
-    const API_URL = 'https://script.google.com/macros/s/AKfycbxjF4ZDC4tIKjO0ds70_1n93kEiZX3KtsjcbecBEWSFkFhMIDsz_chKCl8qc_rXUhmP/exec';
+    const URL_SCRIPT = "https://script.google.com/macros/s/AKfycbxjF4ZDC4tIKjO0ds70_1n93kEiZX3KtsjcbecBEWSFkFhMIDsz_chKCl8qc_rXUhmP/exec";
     let catalogo = [];
 
-    // Cargar catálogo al inicio
-    fetch(API_URL)
-      .then(response => response.json())
-      .then(data => catalogo = data)
-      .catch(error => alert("❌ Error al cargar catálogo: " + error));
+    // Obtener datos del catálogo
+    fetch(URL_SCRIPT)
+      .then(r => r.json())
+      .then(data => { catalogo = data; });
 
     // Autocompletar al escribir código
-    document.addEventListener('input', function(e) {
-      if (e.target.classList.contains('codigo-input')) {
-        const row = e.target.closest('tr');
+    document.addEventListener("input", e => {
+      if (e.target.classList.contains("codigo-input")) {
+        const row = e.target.closest("tr");
         const codigo = e.target.value.trim();
-        const productoInput = row.querySelector('.producto-input');
-        const descripcionInput = row.querySelector('.descripcion-input');
+        const productoInput = row.querySelector(".producto-input");
+        const descripcionInput = row.querySelector(".descripcion-input");
 
-        const item = catalogo.find(i => i.codigo === codigo);
-        if (item) {
-          productoInput.value = item.producto;
-          descripcionInput.value = item.descripcion;
+        const match = catalogo.find(item => item.codigo === codigo);
+        if (match) {
+          productoInput.value = match.producto;
+          descripcionInput.value = match.descripcion;
         } else {
-          productoInput.value = '';
-          descripcionInput.value = '';
+          productoInput.value = "";
+          descripcionInput.value = "";
         }
       }
     });
 
-    // Enviar pedido
     function enviarPedidos() {
-      const tecnico = document.getElementById('tecnico').value.trim();
-      const filas = document.querySelectorAll('#tabla-pedidos tr');
+      const tecnico = document.getElementById("tecnico").value.trim();
+      const filas = document.querySelectorAll("#tabla-pedidos tr");
       const datos = [];
 
       filas.forEach(fila => {
-        const codigo = fila.querySelector('.codigo-input').value.trim();
-        const producto = fila.querySelector('.producto-input').value.trim();
-        const descripcion = fila.querySelector('.descripcion-input').value.trim();
-        const cantidad = fila.querySelector('.cantidad-input').value.trim();
-        const comentario = fila.querySelector('.comentario-input').value.trim();
+        const codigo = fila.querySelector(".codigo-input").value.trim();
+        const producto = fila.querySelector(".producto-input").value.trim();
+        const descripcion = fila.querySelector(".descripcion-input").value.trim();
+        const cantidad = fila.querySelector(".cantidad-input").value.trim();
+        const comentario = fila.querySelector(".comentario-input").value.trim();
 
         if (codigo && cantidad) {
           datos.push({ tecnico, codigo, producto, descripcion, cantidad, comentario });
@@ -101,28 +99,25 @@
       });
 
       if (datos.length === 0) {
-        alert("Debe llenar al menos un pedido con código y cantidad.");
+        alert("Debe ingresar al menos un pedido con código y cantidad.");
         return;
       }
 
-      fetch(API_URL, {
+      fetch(URL_SCRIPT, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(datos)
+        body: JSON.stringify(datos),
+        headers: { "Content-Type": "application/json" }
       })
-      .then(response => response.json())
+      .then(res => res.json())
       .then(resp => {
         if (resp.ok) {
-          alert("✅ Pedido enviado correctamente");
+          alert("✅ Pedido enviado correctamente.");
           location.reload();
         } else {
-          alert("❌ Error al enviar: " + resp.error);
+          alert("❌ Error al enviar pedido.");
         }
-      })
-      .catch(error => alert("❌ Error de conexión con Google Script: " + error));
+      });
     }
   </script>
 </body>
 </html>
-
-
